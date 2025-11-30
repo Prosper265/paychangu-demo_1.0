@@ -4,402 +4,363 @@ PayChangu API Integration in PHP
 
 
 
+# PayChangu Integration Kit 🚀
 
-# 🚀 Complete PayChangu Integration Guide
+A complete PHP integration kit for accepting payments in Malawi using **PayChangu** payment gateway. This project provides ready-to-use files for seamless payment processing with support for credit/debit cards, mobile money (Airtel & TNM), and bank transfers.
 
-## 📋 Table of Contents
-1. [Overview](#overview)
-2. [Before You Start](#before-you-start)
-3. [Method 1: HTML Checkout](#method-1-html-checkout)
-4. [Method 2: Inline Checkout](#method-2-inline-checkout)
-5. [Setting Up Webhooks](#setting-up-webhooks)
-6. [Testing Your Integration](#testing)
-7. [Going Live](#going-live)
-8. [Troubleshooting](#troubleshooting)
+## Features ✨
 
----
+- 💳 **Credit/Debit Card** payments
+- 📱 **Mobile Money** integration (Airtel, TNM)
+- 🏦 **Bank Transfer** support
+- 🔄 **Webhook** support for real-time payment notifications
+- ✅ **Payment Verification** - Server-side validation
+- 🔒 **Secure** - Secret key authentication
+- 📝 **Comprehensive** documentation and examples
 
-## 🎯 Overview
+## Project Structure 📁
 
-PayChangu allows you to accept payments in Malawi using:
-- 💳 **Credit/Debit Cards**
-- 📱 **Mobile Money** (Airtel, TNM)
-- 🏦 **Bank Transfers**
+```
+paychangu_1.0/
+├── README.md                 # This file
+├── GUIDE.md                  # Complete integration guide
+├── payment.php               # Payment form page
+├── process-payment.php       # Payment processing
+├── callback.php              # Successful payment handler
+├── failed.php                # Failed payment handler
+└── changu-webhook.php        # Webhook receiver for notifications
+```
 
-This guide provides **two integration methods**:
-- **HTML Checkout**: Simplest - redirect to PayChangu page
-- **Inline Checkout**: Modern - popup on your website
+## File Descriptions 📄
 
----
+### `payment.php`
+Simple HTML payment form for testing the integration. Submits payment request to the payment processor.
 
-## ✅ Before You Start
+**What it does:**
+- Displays a payment button
+- Submits form to `process-payment.php`
+- Minimal styling for easy customization
 
-### 1. Create PayChangu Account
+### `process-payment.php`
+Handles the payment request and initiates the PayChangu transaction.
+
+**What it does:**
+- Receives payment form data
+- Generates unique transaction reference (`tx_ref`)
+- Calls PayChangu API to create payment link
+- Redirects customer to PayChangu checkout
+
+**Key Configuration:**
+```php
+$secretKey = 'sec-test-YOUR-SECRET-KEY';
+$publicKey = 'pub-test-YOUR-PUBLIC-KEY';
+$amount = 1000; // in MWK
+$currency = 'MWK';
+```
+
+### `callback.php`
+Handles the return from successful PayChangu payment.
+
+**What it does:**
+- Receives transaction reference from PayChangu redirect
+- Verifies payment with PayChangu API
+- Updates database/records with successful payment
+- Displays success message to customer
+- Creates session for payment tracking
+
+**Important:** Always verify payment on server-side - never trust URL parameters alone!
+
+### `failed.php`
+Handles failed or cancelled payments.
+
+**What it does:**
+- Displays user-friendly failure message
+- Shows transaction reference for support
+- Provides retry option
+- Logs failed payment attempts
+
+### `changu-webhook.php`
+Receives automatic payment notifications from PayChangu (recommended for production).
+
+**What it does:**
+- Listens for POST requests from PayChangu
+- Verifies webhook signature using secret key
+- Processes payment events automatically
+- Works even if customer closes browser after payment
+- More reliable than redirect-based callbacks
+
+**Webhook Setup:**
+1. Save this file on your server
+2. Go to PayChangu Dashboard → Settings → API & Webhooks
+3. Add your webhook URL (e.g., `https://yourdomain.com/changu-webhook.php`)
+4. Enable all event types
+5. Save settings
+
+## Getting Started 🎯
+
+### Prerequisites
+- PHP 7.0+
+- cURL extension enabled
+- PayChangu account with API keys
+- HTTPS enabled on your server (for production)
+
+### Step 1: Create PayChangu Account
 1. Go to [PayChangu Dashboard](https://dashboard.paychangu.com)
 2. Sign up and verify your account
 3. Complete your business profile
 
-### 2. Get Your API Keys
-1. Login to dashboard
-2. Go to **Settings** > **API & Webhooks**
-3. You'll see:
-   - **Public Key** (starts with `pub-test-` or `pub-live-`)
-   - **Secret Key** (starts with `sec-test-` or `sec-live-`)
+### Step 2: Get API Keys
+1. Login to PayChangu Dashboard
+2. Navigate to **Settings** → **API & Webhooks**
+3. Copy your:
+   - **Public Key** (format: `pub-test-...` or `pub-live-...`)
+   - **Secret Key** (format: `sec-test-...` or `sec-live-...`)
    - **Webhook Secret** (for webhook verification)
 
-### 3. File Structure
-Create these files on your server:
-```
-your-website/
-├── payment.php          (Payment form - HTML or Inline method)
-├── callback.php         (Handles successful payments)
-├── failed.php           (Handles failed payments)
-├── webhook.php          (Receives automatic notifications)
-└── verify_payment.php   (Optional: Manual verification)
-```
+### Step 3: Configure the Files
+Update API keys in these files:
 
----
-
-## 🎨 Method 1: HTML Checkout (Easiest)
-
-### How It Works
-1. Customer fills form on your site
-2. Form submits to PayChangu
-3. Customer completes payment on PayChangu page
-4. PayChangu redirects back to your site
-
-### Step-by-Step Setup
-
-#### Step 1: Create Payment Form
-Use the **PayChangu HTML Checkout - Payment Form** artifact I provided.
-
-**Important things to change:**
-```html
-<!-- Replace with YOUR public key -->
-<input type="hidden" name="public_key" value="pub-test-YOUR-KEY-HERE" />
-
-<!-- Replace with YOUR domain -->
-<input type="hidden" name="callback_url" value="https://yourdomain.com/callback.php" />
-<input type="hidden" name="return_url" value="https://yourdomain.com/failed.php" />
-
-<!-- Replace with actual customer data -->
-<input type="hidden" name="email" value="customer@example.com" />
-<input type="hidden" name="first_name" value="John" />
-
-<!-- Replace with actual amount -->
-<input type="hidden" name="amount" value="1000" />
-```
-
-#### Step 2: Create Callback Handler
-Use the **PayChangu Callback Handler** artifact I provided.
-
-**Important things to change:**
+**process-payment.php:**
 ```php
-// Your SECRET key (NOT public key!)
+$secretKey = 'sec-test-YOUR-SECRET-KEY-HERE';
+$publicKey = 'pub-test-YOUR-PUBLIC-KEY-HERE';
+```
+
+**callback.php:**
+```php
 $secret_key = 'sec-test-YOUR-SECRET-KEY-HERE';
-
-// Your expected amount and currency
-$expected_amount = 1000;
-$expected_currency = 'MWK';
 ```
 
-#### Step 3: Create Failed Payment Page
-Use the **PayChangu Failed Payment Handler** artifact I provided.
-
-No changes needed - it works as-is!
-
----
-
-## ⚡ Method 2: Inline Checkout (Modern)
-
-### How It Works
-1. Customer clicks "Pay Now" button
-2. Payment popup appears on your page
-3. Customer completes payment in popup
-4. Popup closes, redirects to callback
-
-### Step-by-Step Setup
-
-#### Step 1: Create Payment Page
-Use the **PayChangu Inline Checkout - JavaScript Method** artifact I provided.
-
-**Important things to change:**
-```javascript
-PaychanguCheckout({
-    // Replace with YOUR public key
-    "public_key": "pub-test-YOUR-KEY-HERE",
-    
-    // Replace with YOUR domain
-    "callback_url": "https://yourdomain.com/callback.php",
-    "return_url": "https://yourdomain.com/failed.php",
-    
-    // Replace with actual customer data
-    "customer": {
-        "email": "customer@example.com",
-        "first_name": "John",
-        "last_name": "Doe"
-    },
-    
-    // Replace with actual amount
-    //or add input fields in the form in index page to submit.
-    "amount": 1000
-});
-```
-
-#### Step 2: Create Callback Handler
-Same as HTML Checkout method - use the callback.php artifact.
-
-#### Step 3: Create Failed Payment Page
-Same as HTML Checkout method - use the failed.php artifact.
-
----
-
-## 🔔 Setting Up Webhooks (Recommended!)
-
-### Why Use Webhooks?
-- Get notified immediately when payment happens
-- Works even if customer closes browser
-- More reliable than waiting for redirect
-- Can process payments automatically
-
-### Setup Steps
-
-#### Step 1: Create Webhook Handler
-Use the **PayChangu Webhook Handler** artifact I provided.
-
-**Important things to change:**
+**changu-webhook.php:**
 ```php
-// Get this from PayChangu Dashboard > Settings > API & Webhooks
-$webhook_secret = 'your_webhook_secret_key_here';
+$webhook_secret = 'YOUR-WEBHOOK-SECRET-HERE';
 ```
 
-#### Step 2: Upload to Server
-Upload `webhook.php` to your server, e.g.:
-```
-https://yourdomain.com/webhook.php
-```
-
-#### Step 3: Register in PayChangu Dashboard
-1. Login to PayChangu Dashboard
-2. Go to **Settings** > **API & Webhooks**
-3. Enter your webhook URL: `https://yourdomain.com/webhook.php`
-4. Check all event types
-5. Click **Save**
-
-#### Step 4: Test Webhook
-Make a test payment and check if:
-- File `webhook_log.txt` is created
-- File `payments_log.txt` shows the payment
-
----
-
-## 🧪 Testing Your Integration
-
-### Test Credentials
-```
-Test Card Number: 4242 4242 4242 4242
-Expiry: Any future date (e.g., 12/2030)
-CVV: Any 3 digits (e.g., 123)
-
-Airtel Money Test: 990000000
+### Step 4: Upload Files
+Upload all files to your web server:
+```bash
+your-domain.com/
+├── payment.php
+├── process-payment.php
+├── callback.php
+├── failed.php
+└── changu-webhook.php
 ```
 
-### Testing Checklist
+### Step 5: Configure Callback URLs
+Update the callback URLs in `process-payment.php`:
 
-#### ✅ Test Successful Payment
-1. Go to your payment page
-2. Enter test card details
-3. Complete payment
-4. Should redirect to callback.php
-5. Should see success message
-6. Check webhook_log.txt for notification
-
-#### ✅ Test Failed Payment
-1. Try paying with insufficient funds
-2. Or cancel the payment
-3. Should redirect to failed.php
-4. Should see failure message
-
-#### ✅ Test Webhook
-1. Make a payment
-2. Check if webhook_log.txt was created
-3. Check if payments_log.txt was updated
-4. Verify signature validation works
-
----
-
-## 🚀 Going Live
-
-### Checklist Before Going Live
-
-#### 1. Switch to Live Keys
 ```php
-// Change from test keys to live keys
-$public_key = 'pub-live-YOUR-LIVE-KEY';
-$secret_key = 'sec-live-YOUR-LIVE-KEY';
-$webhook_secret = 'your_live_webhook_secret';
+'callback_url' => 'https://yourdomain.com/callback.php',  // Success page
+'return_url' => 'https://yourdomain.com/failed.php',      // Failure page
 ```
 
-#### 2. Update URLs
-Make sure all URLs point to your actual domain:
+## Usage 🔧
+
+### Basic Payment Flow
+
+1. **Customer initiates payment:**
+   - User clicks "Pay" button on `payment.php`
+   - Form submits to `process-payment.php`
+
+2. **Payment processing:**
+   - `process-payment.php` creates transaction
+   - Customer redirected to PayChangu checkout
+
+3. **Customer completes payment:**
+   - PayChangu handles payment processing
+   - Customer returns to your site
+
+4. **Handle result:**
+   - Success → `callback.php` (verify & process)
+   - Failure → `failed.php` (show error)
+
+5. **Receive webhook (optional but recommended):**
+   - `changu-webhook.php` receives payment notification
+   - Update records automatically
+
+### Test the Integration
+
+1. Access `payment.php` in your browser
+2. Click the payment button
+3. You'll be redirected to PayChangu test environment
+4. Use test credentials to complete payment
+5. Verify callback and success page
+
+## Payment Data Structure 📊
+
+### Basic Payment Information
 ```php
-callback_url: "https://yourdomain.com/callback.php"
-return_url: "https://yourdomain.com/failed.php"
-webhook_url: "https://yourdomain.com/webhook.php"
+$paymentData = [
+    'public_key' => 'pub-test-YOUR-KEY',
+    'tx_ref' => 'TXN-' . time(),           // Unique transaction reference
+    'amount' => 1000,                       // Amount in MWK
+    'currency' => 'MWK',                   // Currency code
+    'email' => 'customer@example.com',     // Customer email
+    'first_name' => 'John',                // Customer first name
+    'last_name' => 'Doe',                  // Customer last name
+    'title' => 'Product Purchase',         // Payment title
+    'description' => 'Item description',   // Payment description
+    'callback_url' => 'https://...',       // Success redirect
+    'return_url' => 'https://...',         // Failure redirect
+    'meta' => [                            // Custom metadata
+        'order_id' => '12345',
+        'customer_id' => '67890'
+    ]
+];
 ```
 
-#### 3. Enable SSL (HTTPS)
-- PayChangu **requires HTTPS** for webhooks
-- Get SSL certificate (free from Let's Encrypt)
-- Ensure all URLs use `https://`
+## API Endpoints 🔌
 
-#### 4. Security Checklist
-- ✅ Secret keys stored securely (not in JavaScript!)
-- ✅ Webhook signature verification enabled
-- ✅ Database prepared for storing transactions
-- ✅ Email notifications configured
-- ✅ Error logging in place
-- ✅ Test all payment methods (card, mobile money, bank)
-
-#### 5. Database Setup (Recommended)
-Create a table to store payments:
-```sql
-CREATE TABLE payments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    tx_ref VARCHAR(255) UNIQUE NOT NULL,
-    charge_id VARCHAR(255),
-    amount DECIMAL(10, 2) NOT NULL,
-    currency VARCHAR(10) NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    customer_email VARCHAR(255),
-    customer_name VARCHAR(255),
-    payment_method VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+### Create Payment
 ```
+POST https://api.paychangu.com/payment
+```
+Initiates a new payment transaction.
 
----
+### Verify Payment
+```
+GET https://api.paychangu.com/verify-payment/{tx_ref}
+```
+Verifies a payment was successfully processed.
 
-## 🔧 Troubleshooting
+### Webhook Events
+PayChangu sends these events to your webhook:
+- `payment.successful` - Payment completed
+- `payment.failed` - Payment failed
+- `payment.cancelled` - Customer cancelled
 
-### Common Issues
+## Security Best Practices 🔒
 
-#### Issue 1: Payment Not Redirecting
-**Cause**: Wrong callback URL
-**Solution**: 
-- Verify URL is correct and accessible
-- Check URL has no typos
-- Ensure domain supports HTTPS
+1. **Never expose secret keys:**
+   - Keep `sec-test-*` and `sec-live-*` keys private
+   - Use environment variables in production
+   - Never commit keys to version control
 
-#### Issue 2: Webhook Not Receiving Notifications
-**Cause**: 
-- Wrong webhook URL
-- Server blocking requests
-- Invalid signature
+2. **Always verify payments server-side:**
+   ```php
+   // Good - Server verification
+   $response = verifyPayment($tx_ref, $secret_key);
+   
+   // Bad - Trust URL parameter
+   if ($_GET['status'] == 'success') { ... }
+   ```
 
-**Solution**:
+3. **Use HTTPS in production:**
+   - Encrypt all communications
+   - Protect sensitive payment data
+
+4. **Validate webhook signatures:**
+   - Verify webhook came from PayChangu
+   - Use webhook secret key for validation
+
+5. **Implement rate limiting:**
+   - Prevent abuse of payment endpoints
+   - Log suspicious activity
+
+## Troubleshooting 🐛
+
+### Payment Not Redirecting
+- Check if PayChangu API is accessible
+- Verify public key is correct
+- Check callback/return URLs are valid
+- Ensure JSON is properly formatted
+
+### Webhook Not Receiving
+- Verify webhook URL is public and HTTPS
+- Check firewall/security settings
+- Verify webhook secret is correct
+- Check server logs for errors
+
+### Payment Verification Failed
+- Ensure secret key matches the one in dashboard
+- Verify transaction reference is correct
+- Check API endpoint is reachable
+- Confirm payment was actually completed on PayChangu
+
+## Environment Variables 🌍
+
+For production, use environment variables:
+
 ```php
-// Check webhook_log.txt for errors
-// Verify webhook URL in dashboard matches your file
-// Test webhook URL directly in browser
-// Check server error logs
+// process-payment.php
+$secretKey = $_ENV['PAYCHANGU_SECRET_KEY'] ?? getenv('PAYCHANGU_SECRET_KEY');
+$publicKey = $_ENV['PAYCHANGU_PUBLIC_KEY'] ?? getenv('PAYCHANGU_PUBLIC_KEY');
 ```
 
-#### Issue 3: Signature Verification Failing
-**Cause**: Wrong webhook secret
-**Solution**:
-```php
-// Get correct webhook secret from dashboard
-// Make sure no extra spaces in secret key
-// Check security_log.txt for details
+Set via `.env` file:
+```
+PAYCHANGU_SECRET_KEY=sec-live-YOUR-SECRET
+PAYCHANGU_PUBLIC_KEY=pub-live-YOUR-PUBLIC
 ```
 
-#### Issue 4: Payment Verification Fails
-**Cause**: Wrong secret key or network issue
-**Solution**:
-```php
-// Verify you're using SECRET key (not public key)
-// Check if curl is enabled on server
-// Try verification URL directly in browser
-```
+## Testing 🧪
+
+### Test Mode
+- Use test API keys (prefix: `test-`)
+- PayChangu provides test cards
+- No real money charged
+- Safe for development
+
+### Production Mode
+- Switch to live API keys (prefix: `live-`)
+- Real transactions processed
+- Customer data required
+- PCI compliance recommended
+
+## Support & Documentation 📚
+
+- **PayChangu Documentation:** [docs.paychangu.com](https://docs.paychangu.com)
+- **PayChangu Dashboard:** [dashboard.paychangu.com](https://dashboard.paychangu.com)
+- **GUIDE.md:** Complete integration guide with examples
+
+## Integration Methods 📋
+
+This kit supports multiple integration approaches:
+
+1. **Redirect Checkout:** Customer redirected to PayChangu page
+2. **Webhook Integration:** Real-time notifications
+3. **API Integration:** Programmatic payment creation
+
+## Common Use Cases 💼
+
+- 🛒 **E-commerce:** Product purchases
+- 💵 **Invoicing:** Service payments
+- 📚 **Education:** Course fees, tuition
+- 🎫 **Ticketing:** Event registrations
+- 💰 **Donations:** Fundraising campaigns
+- 🏥 **Healthcare:** Medical service payments
+
+## Version & License 📝
+
+- **Version:** 1.0
+- **PHP Requirements:** 7.0+
+- **Status:** Production Ready
+
+## Contributing 🤝
+
+To improve this integration kit:
+1. Test thoroughly
+2. Document changes
+3. Report issues
+4. Share improvements
+
+## Changelog 📝
+
+### v1.0 (Initial Release)
+- Complete payment processing
+- Callback handler with verification
+- Failed payment handler
+- Webhook support
+- Comprehensive documentation
 
 ---
 
-## 📊 Testing Flow Diagram
+## Need Help? 💬
 
-```
-CUSTOMER                    YOUR WEBSITE                 PAYCHANGU
-   |                             |                           |
-   |--[1. Clicks Pay Now]------->|                           |
-   |                             |--[2. Form Submits]------->|
-   |                             |                           |
-   |<--------[3. Payment Page]--------------------------|   |
-   |                             |                           |
-   |--[4. Enters Details]---------------------------------->|
-   |                             |                           |
-   |                             |<--[5. Webhook Notification]|
-   |                             |                           |
-   |<------[6. Redirect to callback.php]--------------------|
-   |                             |                           |
-   |                             |--[7. Verify Payment]----->|
-   |                             |                           |
-   |                             |<--[8. Verification Result]|
-   |                             |                           |
-   |<---[9. Success Page]--------|                           |
-```
+- Review `GUIDE.md` for step-by-step instructions
+- Check PayChangu API documentation
+- Review code comments in each file
+- Test in development mode first
 
----
-
-## 📞 Support
-
-### Need Help?
-- **PayChangu Documentation**: https://docs.paychangu.com
-- **PayChangu Support**: support@paychangu.com
-- **Dashboard**: https://dashboard.paychangu.com
-
-### Common Resources
-- Test in sandbox mode first
-- Use test credentials provided above
-- Check webhook logs for debugging
-- Always verify payments server-side
-
----
-
-## 🎓 Best Practices
-
-### Security
-1. ✅ Always verify webhook signatures
-2. ✅ Keep secret keys secure (never in JavaScript!)
-3. ✅ Use HTTPS for all URLs
-4. ✅ Verify payment before giving value
-5. ✅ Log all transactions
-
-### User Experience
-1. ✅ Show clear error messages
-2. ✅ Provide multiple payment methods
-3. ✅ Send confirmation emails
-4. ✅ Allow retry on failed payments
-5. ✅ Show payment status clearly
-
-### Reliability
-1. ✅ Use webhooks (don't rely only on redirects)
-2. ✅ Store all transactions in database
-3. ✅ Handle network errors gracefully
-4. ✅ Implement retry logic
-5. ✅ Monitor webhook logs
-
----
-
-## ✨ You're Ready!
-
-You now have everything needed to accept payments with PayChangu:
-- ✅ Payment forms (HTML and Inline methods)
-- ✅ Callback handlers
-- ✅ Webhook integration
-- ✅ Error handling
-- ✅ Security measures
-
-**Start with test mode, verify everything works, then switch to live mode!**
-
-Good luck with your integration! 🎉
+**Happy Integrating! 🎉**
