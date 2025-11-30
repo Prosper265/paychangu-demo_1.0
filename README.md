@@ -312,7 +312,6 @@ PAYCHANGU_PUBLIC_KEY=pub-live-YOUR-PUBLIC
 
 - **PayChangu Documentation:** [docs.paychangu.com](https://docs.paychangu.com)
 - **PayChangu Dashboard:** [dashboard.paychangu.com](https://dashboard.paychangu.com)
-- **GUIDE.md:** Complete integration guide with examples
 
 ## Integration Methods 📋
 
