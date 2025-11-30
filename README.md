@@ -357,7 +357,6 @@ To improve this integration kit:
 
 ## Need Help? 💬
 
-- Review `GUIDE.md` for step-by-step instructions
 - Check PayChangu API documentation
 - Review code comments in each file
 - Test in development mode first
