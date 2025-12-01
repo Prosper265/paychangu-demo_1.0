@@ -1,8 +1,3 @@
-# paychangu-demo_1.0
-PayChangu API Integration in PHP
-
-
-
 
 # PayChangu Integration Kit 🚀
 
@@ -23,7 +18,6 @@ A complete PHP integration kit for accepting payments in Malawi using **PayChang
 ```
 paychangu_1.0/
 ├── README.md                 # This file
-├── GUIDE.md                  # Complete integration guide
 ├── payment.php               # Payment form page
 ├── process-payment.php       # Payment processing
 ├── callback.php              # Successful payment handler
